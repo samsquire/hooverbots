@@ -1,6 +1,5 @@
 package scalabot
-
-import scalabot._
+import types._
 
 class Hooverbot(room: Room, position: Coord) {
   def south : Hooverbot = new Hooverbot(room, room.south(position))

@@ -1,3 +1,4 @@
+package scalabot
 import scalabot._
 
 import org.scalatest._
