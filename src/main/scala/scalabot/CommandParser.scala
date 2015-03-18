@@ -13,14 +13,14 @@ trait NESWCommandable[T] {
 }
 
 class NESWDispatcher[C](commanded: NESWCommandable[C]) {
-  def process(commands: List[Command]) : List[Option[C]] = {
-    commands.map((command) => command match  {
-        case 'N' => Some(commanded.north())
-        case 'E' => Some(commanded.east())
-        case 'W' => Some(commanded.west())
-        case 'S' => Some(commanded.south())
-        case _ => None
-      })
+  def process(command: Command) : Option[C] = {
+    command match  {
+      case 'N' => Some(commanded.north())
+      case 'E' => Some(commanded.east())
+      case 'W' => Some(commanded.west())
+      case 'S' => Some(commanded.south())
+      case _ => None
+    }
   }
 }
 

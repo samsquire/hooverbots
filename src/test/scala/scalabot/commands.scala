@@ -23,8 +23,10 @@ class FakeCommandable extends NESWCommandable[Char] {
 class CommandDispatcherSpec extends Test {
 
   "Command dispatcher" should "map commands" in {
-    val dispatcher = new NESWDispatcher[Char](new FakeCommandable()).process(List[Command]('N', 'E', 'S', 'W'))
-    dispatcher.flatten should contain theSameElementsAs List[Char]('N', 'E', 'S', 'W')
+    val dispatcher = new NESWDispatcher[Char](new FakeCommandable())
+    val results = List[Command]('N', 'E', 'S', 'W').map(dispatcher.process(_))
+
+    results.flatten should contain theSameElementsAs List[Char]('N', 'E', 'S', 'W')
   }
 
 }
