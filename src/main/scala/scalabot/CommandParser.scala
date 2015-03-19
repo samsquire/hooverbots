@@ -1,5 +1,7 @@
 package scalabot
+import scala.collection.mutable._
 import scalabot.types._
+
 
 class CommandParser() {
   def parse(stream: String) : List[Command] = stream.toList
@@ -7,7 +9,7 @@ class CommandParser() {
 
 class Scenario(val dimensions: Coord,
   val hooverPosition: Coord,
-  val dirt: List[Coord],
+  val dirtyPositions: List[Coord],
   val commands: List[Command]) { }
 
 class ScenarioParser(commandParser : CommandParser) {
@@ -19,10 +21,34 @@ class ScenarioParser(commandParser : CommandParser) {
   def parse(lines: Iterator[String]) : Scenario = {
     val dimensions = parseCoordinate(lines.next())
     val hooverPosition = parseCoordinate(lines.next())
-    val remainingLines = lines.toList()
-    val dirt = remainingLines.dropRight(2).map(parseCoordinate)
-    val commands = commandParser.parse(remainingLines.last)
-    new Scenario(dimensions, hooverPosition, dirt, commands)
+    val remainingLines = lines.toList
+    val (dirt, commandStream) = remainingLines.partition("""\d* \d*""".r.pattern.matcher(_).matches)
+    val commands = commandParser.parse(commandStream(0))
+    new Scenario(dimensions, hooverPosition, dirt.map(parseCoordinate), commands)
+  }
+}
+
+class Output(val lastPosition: Coord, val cleanedCount: Int, val movements: List[Hooverbot]) {
+  override def toString() : String = "%s\n%d\n".format(coordinate(lastPosition), cleanedCount)
+  def coordinate(coord: Coord) : String = { "%d %d".format(coord._1, coord._2) }
+}
+
+class ScenarioRunner(scenario: Scenario) {
+
+  def initialState() : (Hooverbot, Room) = {
+    val room = new Room(scenario.dimensions, scenario.dirtyPositions)
+    (new Hooverbot(room, scenario.hooverPosition), room)
+  }
+
+  def run() : Output = {
+    val (hooverbot, room) = initialState()
+    val dispatcher = new NESWDispatcher[Hooverbot]()
+    val movements = scenario.commands.foldLeft(ListBuffer(hooverbot))((previousMovements, command) =>
+          dispatcher.process(previousMovements.last, command) match {
+            case Some(success) => previousMovements += success
+            case None => previousMovements
+          })
+    new Output(movements.last.pos, movements.last.cleanedCount, movements.toList)
   }
 }
 
