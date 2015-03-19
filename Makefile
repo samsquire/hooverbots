@@ -7,3 +7,5 @@ compile:
 test:
 	sbt test
 
+run:
+	sbt "run input.txt"
