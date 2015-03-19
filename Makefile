@@ -1,5 +1,5 @@
 
-default: compile test
+default: compile test run
 
 compile:
 	sbt compile
