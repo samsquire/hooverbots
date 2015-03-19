@@ -2,7 +2,6 @@ package scalabot
 import scala.collection.mutable._
 import scalabot.types._
 
-
 class CommandParser() {
   def parse(stream: String) : List[Command] = stream.toList
 }
@@ -35,19 +34,25 @@ class Output(val lastPosition: Coord, val cleanedCount: Int, val movements: List
 
 class ScenarioRunner(scenario: Scenario) {
 
+  type Tick = (ListBuffer[Hooverbot], ListBuffer[String])
+  val dispatcher = new NESWDispatcher[Hooverbot]()
+
   def initialState() : (Hooverbot, Room) = {
     val room = new Room(scenario.dimensions, scenario.dirtyPositions)
     (new Hooverbot(room, scenario.hooverPosition), room)
   }
 
+  def scenarioTick(previous: Tick, command: Command): Tick = {
+    val (previousMovements, errors) = previous
+    dispatcher.process(previousMovements.last, command) match {
+      case Some(success) => (previousMovements += success, errors)
+      case None => (previousMovements, errors += ("ignoring bad command %s".format(command)))
+    }
+  }
+
   def run() : Output = {
     val (hooverbot, room) = initialState()
-    val dispatcher = new NESWDispatcher[Hooverbot]()
-    val movements = scenario.commands.foldLeft(ListBuffer(hooverbot))((previousMovements, command) =>
-          dispatcher.process(previousMovements.last, command) match {
-            case Some(success) => previousMovements += success
-            case None => previousMovements
-          })
+    val (movements, errors) = scenario.commands.foldLeft((ListBuffer[Hooverbot](hooverbot), ListBuffer[String]()))(scenarioTick)
     new Output(movements.last.pos, movements.last.cleanedCount, movements.toList)
   }
 }
