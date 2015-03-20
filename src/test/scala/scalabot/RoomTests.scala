@@ -16,5 +16,9 @@ class RoomSpec extends Test {
     room.dirtCount should be (3)
   }
 
+  "Invalid dirt" should "not be creatable" in {
+    an [InvalidScenario] should be thrownBy new Room((3, 3), List[Coord]((8, 8)))
+  }
+
 }
 // vim: set ts=2 sw=2 et sts=2:
