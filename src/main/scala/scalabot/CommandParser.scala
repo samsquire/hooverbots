@@ -2,6 +2,8 @@ package scalabot
 import scala.collection.mutable._
 import scalabot.types._
 
+class InvalidScenario(message: String) extends Exception(message) { }
+
 class CommandParser() {
   def parse(stream: String) : List[Command] = stream.toList
 }
@@ -18,16 +20,23 @@ class ScenarioParser(commandParser : CommandParser) {
   }
 
   def parse(lines: Iterator[String]) : Scenario = {
-    val dimensions = parseCoordinate(lines.next())
-    val hooverPosition = parseCoordinate(lines.next())
-    val remainingLines = lines.toList
-    val (dirt, commandStream) = remainingLines.partition("""\d* \d*""".r.pattern.matcher(_).matches)
-    val commands = commandParser.parse(commandStream(0))
-    new Scenario(dimensions, hooverPosition, dirt.map(parseCoordinate), commands)
+    try {
+      val dimensions = parseCoordinate(lines.next())
+      val hooverPosition = parseCoordinate(lines.next())
+      val remainingLines = lines.toList
+      val (dirt, commandStream) = remainingLines.partition("""\d* \d*""".r.pattern.matcher(_).matches)
+      val commands = commandParser.parse(commandStream(0))
+      new Scenario(dimensions, hooverPosition, dirt.map(parseCoordinate), commands)
+    } catch {
+      case e:Exception => throw new InvalidScenario("Could not parse scenario due to %s".format(e.toString()))
+    }
   }
 }
 
-class Output(val lastPosition: Coord, val cleanedCount: Int, val movements: List[Hooverbot]) {
+class Output(val lastPosition: Coord,
+  val cleanedCount: Int,
+  val movements: List[Hooverbot],
+  val errors: List[String] = List[String]()) {
   override def toString() : String = "%s\n%d\n".format(coordinate(lastPosition), cleanedCount)
   def coordinate(coord: Coord) : String = { "%d %d".format(coord._1, coord._2) }
 }
@@ -53,7 +62,7 @@ class ScenarioRunner(scenario: Scenario) {
   def run() : Output = {
     val (hooverbot, room) = initialState()
     val (movements, errors) = scenario.commands.foldLeft((ListBuffer[Hooverbot](hooverbot), ListBuffer[String]()))(scenarioTick)
-    new Output(movements.last.pos, movements.last.cleanedCount, movements.toList)
+    new Output(movements.last.pos, movements.last.cleanedCount, movements.toList, errors.toList)
   }
 }
 

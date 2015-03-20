@@ -43,10 +43,10 @@ class ScenarioSpec extends Test {
 
   val scenarioParser = new ScenarioParser(new CommandParser())
 
-  def testInput : Iterator[String] = Source.fromFile("input.txt").getLines()
+  def exampleInput : Iterator[String] = Source.fromFile("input.txt").getLines()
 
   "Scenario parser" should "correctly interpret input.txt" in {
-    val scenario = scenarioParser.parse(testInput)
+    val scenario = scenarioParser.parse(exampleInput)
 
     scenario.dimensions should be (5, 5)
     scenario.hooverPosition should be (1, 2)
@@ -54,15 +54,42 @@ class ScenarioSpec extends Test {
     scenario.commands should contain theSameElementsAs List[Command]('N','N','E','S','E','E','S','W','N','W','W')
   }
 
-  "Hooverbot scenario runner" should "correctly interpret file" in {
-    val scenario = scenarioParser.parse(testInput)
+  it should "permit zero dirty positions" in {
+    val scenario = scenarioParser.parse(List[String]("5 5", "0 0", "NESW").toIterator)
+    scenario.dimensions should be (5, 5)
+    scenario.hooverPosition should be (0, 0)
+    scenario.dirtyPositions should contain theSameElementsAs List[Coord]()
+    scenario.commands should contain theSameElementsAs List[Command]('N', 'E', 'S', 'W')
+  }
+
+  it should "not permit missing hoover position" in {
+    an [InvalidScenario] should be thrownBy scenarioParser.parse(List[String]("5 5", "NESW").toIterator)
+  }
+
+  it should "not permit missing dimensions" in {
+    an [InvalidScenario] should be thrownBy scenarioParser.parse(List[String]("NESW").toIterator)
+  }
+
+  it should "not permit missing commands" in {
+    an [InvalidScenario] should be thrownBy scenarioParser.parse(List[String]("5 5", "0 0").toIterator)
+  }
+
+  "Hooverbot scenario parser" should "create a valid scenario from lines of input" in {
+    val scenario = scenarioParser.parse(exampleInput)
     val results = new ScenarioRunner(scenario).run()
     results.lastPosition should be (1, 3)
     results.cleanedCount should be (1)
   }
 
-  "Output" should "output properly" in {
-    val output = new Output((5, 5), 5, List()) 
+  it should "collect errors in command stream" in {
+    val scenario = scenarioParser.parse(List("5 5", "1 0", "1 0", "XYZ").toIterator)
+    val results = new ScenarioRunner(scenario).run()
+    results.errors should contain ("ignoring bad command X")
+    results.errors should contain ("ignoring bad command Z")
+  }
+
+  "Output serialization" should "output contain position and number of cleaned positions" in {
+    val output = new Output((5, 5), 5, List())
     output.toString should equal ("5 5\n5\n")
   }
 }
