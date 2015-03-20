@@ -1,7 +1,7 @@
 Hooverbots
 =
 
-This is an immutable robot simulation. There are two domain main models:
+This is an immutable robot simulation. There are two main domain models:
 
  * **Hooverbot** Holds its position and a reference to the state of the
    room it is in. Can be directed to move. Moving creates a new instance
@@ -14,8 +14,7 @@ This is an immutable robot simulation. There are two domain main models:
 Other support models are:
 
  * **Scenario** all the data to describe a particular scenario involving
-   the state of a room, the position of a hooverbot and a set of
-   commands for the robot
+   the state of a room, the position of a hooverbot and a set of commands for the robot
 * **ScenarioRunner** takes a scenario and coordinates the Hooverbot via
   commands. Will generate an **Output**
 * **Output** holds all the output data for a given scenario. Since the
