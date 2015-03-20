@@ -15,13 +15,13 @@ Other support models are:
 
  * **Scenario** all the data to describe a particular scenario involving
    the state of a room, the position of a hooverbot and a set of commands for the robot
-* **ScenarioRunner** takes a scenario and coordinates the Hooverbot via
-  commands. Will generate an **Output**
+   
+* **ScenarioRunner** takes a scenario and coordinates the Hooverbot via commands. Will generate an **Output**
+
 * **Output** holds all the output data for a given scenario. Since the
   models are immutable, this also contains a copy of every `tick` within
   the simulation. This allows us to replay in the future.
-* **Runner** imports all of the above and uses the API to drive a
-  command line application.
+* **Runner** imports all of the above and uses the API to drive a command line application.
 
 I have tried to decouple small details such as:
 
